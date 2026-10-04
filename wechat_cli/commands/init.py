@@ -29,12 +29,20 @@ def init(db_dir, force):
     # 3. 确定 db_dir
     if db_dir is None:
         db_dir = auto_detect_db_dir()
-        if db_dir is None:
+        if not db_dir:
+            # 兼容只缺密钥文件的场景：已有配置时优先复用 db_dir。
+            try:
+                if os.path.exists(CONFIG_FILE):
+                    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                        db_dir = json.load(f).get("db_dir")
+            except (OSError, json.JSONDecodeError):
+                db_dir = None
+        if not db_dir or not os.path.isdir(db_dir):
             click.echo("[!] 未能自动检测到微信数据目录", err=True)
             click.echo("请通过 --db-dir 参数指定，例如:", err=True)
             click.echo("  wechat-cli init --db-dir ~/path/to/db_storage", err=True)
             sys.exit(1)
-        click.echo(f"[+] 检测到微信数据目录: {db_dir}")
+        click.echo(f"[+] 使用微信数据目录: {db_dir}")
     else:
         db_dir = os.path.abspath(db_dir)
         if not os.path.isdir(db_dir):

@@ -174,6 +174,80 @@ def _find_bytes_in_regions(regions, read_region, needle):
 
 
 # ---------------------------------------------------------------------------
+# XOR 编码字面量兜底扫描（微信 4.1.13+ 已验证）
+# ---------------------------------------------------------------------------
+
+def _scan_windows_encoded_literals(pid, regions, read_region, db_files,
+                                   salt_to_dbs, key_map, remaining_salts,
+                                   print_fn):
+    """扫描内存中 XOR 编码的 ``x'<key><salt>'`` 字面量。
+
+    4.1.13 上 Config.Cipher 的对象布局会变化，但 WCDB 配置字面量仍会被
+    同一个 XOR mask 编码。这里直接按字面量前缀扫描，作为新版兜底路径。
+    """
+    stats = {"prefix_hits": 0, "candidate_count": 0, "verified": 0}
+    mask = WINDOWS_CONFIG_XOR_MASK
+    prefixes = {
+        bytes((mask[0] ^ ord("x"), mask[1] ^ ord("'"))),
+        bytes((mask[0] ^ ord("X"), mask[1] ^ ord("'"))),
+    }
+    seen_candidates = set()
+
+    print_fn(f"\n[*] PID={pid} 第 2 层: XOR 编码字面量扫描 (4.1.13+)")
+    for base, size in regions:
+        data = read_region(base, size)
+        if not data:
+            continue
+        for prefix in prefixes:
+            pos = 0
+            while True:
+                idx = data.find(prefix, pos)
+                if idx < 0:
+                    break
+                stats["prefix_hits"] += 1
+                blob = data[idx:idx + 256]
+                for key_hex, embedded_salt in _windows_v411_config_key_candidates(blob):
+                    cand = (key_hex, embedded_salt)
+                    if cand in seen_candidates:
+                        continue
+                    seen_candidates.add(cand)
+                    stats["candidate_count"] += 1
+                    enc_key = bytes.fromhex(key_hex)
+                    targets = [embedded_salt] if embedded_salt in remaining_salts else list(remaining_salts)
+                    for salt_hex in targets:
+                        if salt_hex not in remaining_salts:
+                            continue
+                        for rel, _path, _sz, db_salt, page1 in db_files:
+                            if db_salt != salt_hex:
+                                continue
+                            if verify_enc_key(enc_key, page1):
+                                key_map[salt_hex] = key_hex
+                                remaining_salts.discard(salt_hex)
+                                stats["verified"] += 1
+                                print_fn(
+                                    f"  [FOUND][Encoded] {rel} salt={salt_hex}"
+                                )
+                                break
+                        if not remaining_salts:
+                            break
+                    if not remaining_salts:
+                        break
+                if not remaining_salts:
+                    break
+                pos = idx + 1
+            if not remaining_salts:
+                break
+        if not remaining_salts:
+            break
+
+    print_fn(
+        f"  [Encoded] 前缀命中={stats['prefix_hits']} "
+        f"候选={stats['candidate_count']} 验证通过={stats['verified']}"
+    )
+    return stats
+
+
+# ---------------------------------------------------------------------------
 # Config.Cipher 扫描主流程（微信 4.1.10+，实验性，未实机验证）
 # ---------------------------------------------------------------------------
 
@@ -408,9 +482,16 @@ def extract_keys(db_dir, output_path, pid=None):
                 db_files, salt_to_dbs, key_map, remaining_salts, print,
             )
 
-            # 第 2 层：legacy 明文 x'<hex>' 扫描（4.0.x ~ 4.1.9.x）
+            # 第 2 层：XOR 编码字面量兜底（4.1.13+）
             if remaining_salts:
-                print(f"\n[*] PID={pid_val} 第 2 层: legacy 明文扫描 (4.0.x~4.1.9.x)")
+                _scan_windows_encoded_literals(
+                    pid_val, regions, read_region, db_files,
+                    salt_to_dbs, key_map, remaining_salts, print,
+                )
+
+            # 第 3 层：legacy 明文 x'<hex>' 扫描（4.0.x ~ 4.1.9.x）
+            if remaining_salts:
+                print(f"\n[*] PID={pid_val} 第 3 层: legacy 明文扫描 (4.0.x~4.1.9.x)")
                 scanned_bytes = 0
                 for reg_idx, (base, size) in enumerate(regions):
                     data = _read_mem(h, base, size)
