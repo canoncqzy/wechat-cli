@@ -8,7 +8,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/freestylefly/wechat-cli)
 
-Chat history · Contacts · Sessions · Favorites · Statistics · Export
+Chat history · Contacts · Sessions · Favorites · Statistics · Export · Images
 
 [中文文档](README_CN.md)
 
@@ -19,11 +19,12 @@ Chat history · Contacts · Sessions · Favorites · Statistics · Export
 ## ✨ Highlights
 
 - **🚀 Zero-config install** — `npm install -g` and you're done, no Python needed
-- **📦 11 commands** — sessions, history, search, contacts, members, stats, export, favorites, unread, new-messages, init
+- **📦 12 commands** — sessions, history, search, contacts, members, stats, export, favorites, unread, new-messages, images, init
 - **🤖 AI-first** — JSON output by default, designed for LLM agent tool calls
 - **🔒 Fully local** — on-the-fly SQLCipher decryption, data never leaves your machine
 - **📊 Rich analytics** — top senders, message type breakdown, 24-hour activity charts
 - **📝 Flexible export** — Markdown or plain text, with time range filtering
+- **🖼️ Image decoding** — decrypt encrypted `.dat` images from chats into viewable jpg/png
 
 ---
 
@@ -154,6 +155,7 @@ EOF
 wechat-cli sessions                        # Recent chats
 wechat-cli history "Alice" --limit 20      # Chat messages
 wechat-cli search "deadline" --chat "Team" # Search messages
+wechat-cli images "Alice" --limit 20       # Decode encrypted chat images
 ```
 
 ---
@@ -180,6 +182,7 @@ Common commands:
 - `wechat-cli new-messages` — get messages since last check
 - `wechat-cli members "GROUP"` — list group members
 - `wechat-cli stats "CHAT" --format text` — chat statistics
+- `wechat-cli images "NAME" --limit 20` — decode encrypted chat images
 ```
 
 Then in conversation you can ask Claude things like:
@@ -277,6 +280,20 @@ wechat-cli export "Team" --start-time "2026-04-01" --limit 1000
 
 **Options:** `--format markdown|txt`, `--output`, `--start-time`, `--end-time`, `--limit`
 
+### `images` — Decode Encrypted Images
+
+```bash
+wechat-cli images "Alice"                  # Decode all images in this chat
+wechat-cli images "Team Group" --limit 20  # First 20 only
+wechat-cli images "Alice" --out ./pics     # Custom output directory
+wechat-cli images "Alice" --open           # Open output dir in Finder (macOS)
+wechat-cli images "Alice" --keep-wxgf      # Keep raw .wxgf, skip PNG conversion
+```
+
+**Options:** `--limit`, `--out`, `--open`, `--keep-wxgf`, `--format`
+
+WeChat 4.x stores images as encrypted `.dat` files. This command decrypts them into jpg/png under `~/.wechat-cli/decoded_images/<chat>/` by default (override with `--out`). `--open` only works on macOS. Converting full-size wxgf images to PNG requires [ffmpeg](https://ffmpeg.org/) (`brew install ffmpeg`); without it, raw `.wxgf` files are kept.
+
 ### `favorites` — WeChat Bookmarks
 
 ```bash
@@ -328,6 +345,7 @@ The `--type` option (on `history` and `search`):
 
 - **macOS** ≥ 26.3.1
 - **WeChat for Mac** ≤ 4.1.8.100
+- **WeChat for Windows** ≥ 4.0.x (4.1.10+ uses the experimental Config.Cipher scan)
 
 > Older macOS versions or newer WeChat versions may not be compatible.
 
@@ -338,8 +356,8 @@ The `--type` option (on `history` and `search`):
 | Platform | Status | Notes |
 |----------|--------|-------|
 | macOS (Apple Silicon) | ✅ Supported | Bundled arm64 binary |
-| macOS (Intel) | ✅ Supported | x86_64 binary needed |
-| Windows | ✅ Supported | Reads Weixin.exe process memory |
+| macOS (Intel) | ✅ Supported | Bundled x86_64 binary |
+| Windows | ✅ Supported | Reads Weixin.exe process memory, supports WeChat 4.0.x ~ 4.1.10+ |
 | Linux | ✅ Supported | Reads /proc/pid/mem, requires root |
 
 ---
@@ -351,6 +369,7 @@ WeChat stores chat data in SQLCipher-encrypted SQLite databases locally. WeChat 
 1. **Extracts keys** — scans WeChat process memory for encryption keys (`init`)
 2. **Decrypts on-the-fly** — transparent page-level AES-256-CBC decryption with caching
 3. **Queries locally** — all data stays on your machine, no network access
+4. **Decodes images** — decrypts WeChat 4.x encrypted `.dat` images into viewable files (`images`)
 
 ---
 

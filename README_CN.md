@@ -8,7 +8,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/freestylefly/wechat-cli)
 
-聊天记录 · 联系人 · 会话 · 收藏 · 统计 · 导出
+聊天记录 · 联系人 · 会话 · 收藏 · 统计 · 导出 · 图片
 
 [English](README.md)
 
@@ -19,11 +19,12 @@
 ## ✨ 功能亮点
 
 - **🚀 开箱即用** — `npm install -g` 一键安装，无需 Python
-- **📦 11 个命令** — sessions、history、search、contacts、members、stats、export、favorites、unread、new-messages、init
+- **📦 12 个命令** — sessions、history、search、contacts、members、stats、export、favorites、unread、new-messages、images、init
 - **🤖 AI 优先** — 默认 JSON 输出，专为 LLM Agent 工具调用设计
 - **🔒 全程本地** — SQLCipher 即时解密，数据不出本机
 - **📊 丰富统计** — 发言排行、消息类型分布、24 小时活跃图
 - **📝 灵活导出** — Markdown 或纯文本，支持时间范围过滤
+- **🖼️ 图片解码** — 将聊天中加密的 `.dat` 图片解码为可查看的 jpg/png
 
 ---
 
@@ -152,6 +153,7 @@ EOF
 wechat-cli sessions                        # 最近会话
 wechat-cli history "张三" --limit 20       # 聊天记录
 wechat-cli search "截止日期" --chat "项目组" # 搜索消息
+wechat-cli images "张三" --limit 20        # 解码聊天中的加密图片
 ```
 
 ---
@@ -178,6 +180,7 @@ WeChat CLI 专为 AI Agent 设计，所有命令默认输出结构化 JSON。
 - `wechat-cli new-messages` — 获取上次以来的新消息
 - `wechat-cli members "群名"` — 列出群成员
 - `wechat-cli stats "聊天名" --format text` — 聊天统计
+- `wechat-cli images "名称" --limit 20` — 解码聊天中的加密图片
 ```
 
 然后在对话中可以直接问 Claude：
@@ -275,6 +278,20 @@ wechat-cli export "群聊" --start-time "2026-04-01" --limit 1000
 
 **选项：** `--format markdown|txt`、`--output`、`--start-time`、`--end-time`、`--limit`
 
+### `images` — 解码加密图片
+
+```bash
+wechat-cli images "张三"                    # 解码该聊天全部图片
+wechat-cli images "AI交流群" --limit 20     # 只解码前 20 张
+wechat-cli images "张三" --out ./pics       # 指定输出目录
+wechat-cli images "张三" --open             # 解码后用 Finder 打开输出目录 (macOS)
+wechat-cli images "张三" --keep-wxgf        # 保留原始 .wxgf，不转换 PNG
+```
+
+**选项：** `--limit`、`--out`、`--open`、`--keep-wxgf`、`--format`
+
+微信 4.x 将图片以加密 `.dat` 存储。本命令解密后输出 jpg/png，默认目录为 `~/.wechat-cli/decoded_images/<聊天名>/`（可用 `--out` 覆盖）。`--open` 仅在 macOS 生效。wxgf 全尺寸图转 PNG 需要 [ffmpeg](https://ffmpeg.org/)（`brew install ffmpeg`），未安装时保留原始 `.wxgf`。
+
 ### `favorites` — 微信收藏
 
 ```bash
@@ -326,6 +343,7 @@ wechat-cli new-messages                    # 后续: 仅返回上次以来的新
 
 - **macOS** ≥ 26.3.1
 - **微信 Mac 版** ≤ 4.1.8.100
+- **微信 Windows 版** ≥ 4.0.x（4.1.10+ 使用实验性 Config.Cipher 扫描）
 
 > macOS 老版本或更新的微信版本可能不兼容。
 
@@ -336,8 +354,8 @@ wechat-cli new-messages                    # 后续: 仅返回上次以来的新
 | 平台 | 状态 | 说明 |
 |------|------|------|
 | macOS (Apple Silicon) | ✅ 支持 | 内置 arm64 二进制 |
-| macOS (Intel) | ✅ 支持 | 需要 x86_64 二进制 |
-| Windows | ✅ 支持 | 读取 Weixin.exe 进程内存 |
+| macOS (Intel) | ✅ 支持 | 内置 x86_64 二进制 |
+| Windows | ✅ 支持 | 读取 Weixin.exe 进程内存，兼容微信 4.0.x ~ 4.1.10+ |
 | Linux | ✅ 支持 | 读取 /proc/pid/mem，需要 root |
 
 ---
@@ -349,6 +367,7 @@ wechat-cli new-messages                    # 后续: 仅返回上次以来的新
 1. **提取密钥** — 扫描微信进程内存获取加密密钥（`init`）
 2. **即时解密** — 透明页级 AES-256-CBC 解密，带缓存
 3. **本地查询** — 所有数据留在本机，无需网络访问
+4. **图片解码** — 解密微信 4.x 加密图片 `.dat` 为可查看图片（`images`）
 
 ---
 
