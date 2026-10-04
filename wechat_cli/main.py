@@ -28,6 +28,7 @@ def cli(ctx, config_path):
       wechat-cli search "你好" --limit 50           # 全局搜索
       wechat-cli contacts --query "李"              # 搜索联系人
       wechat-cli new-messages                       # 获取增量新消息
+      wechat-cli images "张三" --limit 20           # 解码聊天的加密图片
     """
     # init/version 命令不需要 AppContext
     if ctx.invoked_subcommand in ("init", "version"):
@@ -55,6 +56,7 @@ from .commands.export import export
 from .commands.stats import stats
 from .commands.unread import unread
 from .commands.favorites import favorites
+from .commands.images import images
 
 cli.add_command(init)
 cli.add_command(sessions)
@@ -67,6 +69,7 @@ cli.add_command(export)
 cli.add_command(stats)
 cli.add_command(unread)
 cli.add_command(favorites)
+cli.add_command(images)
 
 
 if __name__ == "__main__":
