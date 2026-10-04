@@ -4,7 +4,6 @@
 
 **Query your local WeChat data from the command line.**
 
-[![npm version](https://img.shields.io/npm/v/@canghe_ai/wechat-cli.svg)](https://www.npmjs.com/package/@canghe_ai/wechat-cli)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/freestylefly/wechat-cli)
 
@@ -18,7 +17,7 @@ Chat history · Contacts · Sessions · Favorites · Statistics · Export · Ima
 
 ## ✨ Highlights
 
-- **🚀 Zero-config install** — `npm install -g` and you're done, no Python needed
+- **🚀 Run locally** — clone this project's source and `pip install -e .`
 - **📦 12 commands** — sessions, history, search, contacts, members, stats, export, favorites, unread, new-messages, images, init
 - **🤖 AI-first** — JSON output by default, designed for LLM agent tool calls
 - **🔒 Fully local** — on-the-fly SQLCipher decryption, data never leaves your machine
@@ -30,36 +29,25 @@ Chat history · Contacts · Sessions · Favorites · Statistics · Export · Ima
 
 ## 📥 Installation (For Humans)
 
+> ⚠️ Published packages (npm / PyPI) are currently unavailable. Please install and run from this project's source instead.
+
 AI Agents — skip ahead to "Installation (For AI Agents)" below.
 
-### npm (Recommended)
+### From Source (Recommended)
 
 ```bash
-npm install -g @canghe_ai/wechat-cli
-```
-
-> Currently ships a **macOS arm64** binary. Other platforms can use the pip method below. PRs with additional platform binaries are welcome.
-
-**Update to the latest version:**
-
-```bash
-npm update -g @canghe_ai/wechat-cli
-```
-
-### pip
-
-```bash
-pip install wechat-cli
+git clone https://github.com/canoncqzy/wechat-cli.git
+cd wechat-cli
+pip install -e .
 ```
 
 Requires Python >= 3.10.
 
-### From Source
+**Update to the latest version:**
 
 ```bash
-git clone https://github.com/freestylefly/wechat-cli.git
 cd wechat-cli
-pip install -e .
+git pull
 ```
 
 ---
@@ -69,14 +57,14 @@ pip install -e .
 Simply paste the following prompt into Claude Code, OpenClaw, or any AI coding agent:
 
 ```bash
-帮我配置并安装：npm install -g @canghe_ai/wechat-cli
+Clone and install this project: git clone https://github.com/canoncqzy/wechat-cli.git && cd wechat-cli && pip install -e .
 ```
 
 For example, in Claude Code:
 
 ![install-claude-code-1](image/install-claude-code-1.png)
 
-Note: Make sure you have Node.js installed first. You can ask your agent to set it up if needed.
+Note: Make sure you have Python >= 3.10 installed first.
 
 ---
 

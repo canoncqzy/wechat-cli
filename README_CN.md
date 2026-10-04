@@ -4,7 +4,6 @@
 
 **命令行查询本地微信数据，专为 AI 集成设计。**
 
-[![npm version](https://img.shields.io/npm/v/@canghe_ai/wechat-cli.svg)](https://www.npmjs.com/package/@canghe_ai/wechat-cli)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/freestylefly/wechat-cli)
 
@@ -18,7 +17,7 @@
 
 ## ✨ 功能亮点
 
-- **🚀 开箱即用** — `npm install -g` 一键安装，无需 Python
+- **🚀 本地运行** — 克隆本项目源码，`pip install -e .` 即可安装
 - **📦 12 个命令** — sessions、history、search、contacts、members、stats、export、favorites、unread、new-messages、images、init
 - **🤖 AI 优先** — 默认 JSON 输出，专为 LLM Agent 工具调用设计
 - **🔒 全程本地** — SQLCipher 即时解密，数据不出本机
@@ -30,53 +29,42 @@
 
 ## 📥 安装（给人类看）
 
+> ⚠️ 线上发布包（npm / PyPI）暂不可用，请从本项目源码安装运行。
+
 AI Agent 请直接移步到“安装（给 Agent 看）”
 
-### npm（推荐）
+### 从源码安装（推荐）
 
 ```bash
-npm install -g @canghe_ai/wechat-cli
-```
-
-> 目前提供 **macOS arm64** 二进制。其他平台可使用下方 pip 安装。欢迎提交其他平台二进制 PR。
-
-**更新到最新版本：**
-
-```bash
-npm update -g @canghe_ai/wechat-cli
-```
-
-### pip
-
-```bash
-pip install wechat-cli
+git clone https://github.com/canoncqzy/wechat-cli.git
+cd wechat-cli
+pip install -e .
 ```
 
 需要 Python >= 3.10。
 
-### 从源码安装
+**更新到最新版本：**
 
 ```bash
-git clone https://github.com/freestylefly/wechat-cli.git
 cd wechat-cli
-pip install -e .
+git pull
 ```
 
 ---
 
 ## 📥 安装（给 Agent 看）
 
-直接将在你的 Claude Code 或者 OpenClaw 中输入以下提示即可：
+直接在你的 Claude Code 或者 OpenClaw 中输入以下提示即可：
 
 ```bash
-帮我配置并安装：npm install -g @canghe_ai/wechat-cli
+帮我克隆并安装本项目：git clone https://github.com/canoncqzy/wechat-cli.git && cd wechat-cli && pip install -e .
 ```
 
 比如在 Claude Code 中输入：
 
 ![install-claude-code-1](image/install-claude-code-1.png)
 
-注意：请先确保有 node.js 环境。没雨可以让你的 cc 安装环境。
+注意：请先确保本机有 Python >= 3.10 环境。
 
 ## 🚀 快速开始
 
